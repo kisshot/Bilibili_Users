@@ -7,5 +7,7 @@
 阶段3：在阶段2的基础上实现分布式爬虫，使用redis实现 \
 阶段4：借助爬取到的数据进行用户资料的分析** 
 ## 文件介绍
-* **Short_airaing.py**：简单的爬虫，参考airingursb/bilibili-user项目，加入代理池jhao104/proxy_pool来反爬虫，将数据存储到MongoDB中
-* **user_agents.txt**：浏览器标识，用来对抗反爬虫措施
+* **第一阶段暂存**：抓取用户信息，config文件为MongoDB配置文件，user_agents为User-Agent选择文件 \
+这个用户信息———>这个用户关注者有谁———>这个用户的关注者信息———>关注者的关注者有谁———>关注者的关注者的个人信息 \
+循环抓取，由用户得到关注者再得到关注者的关注者，循环往复 \
+连接代理池@jhao104/proxy_pool，信息存储到MongoDB中 \
