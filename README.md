@@ -14,4 +14,4 @@
 连接代理池@jhao104/proxy_pool，信息存储到MongoDB中 
 * **第二阶段暂存**： \
 原理同上，使用scrapy框架，未设置代理池，未设置MongoDB存储
-bilitest为biliuser的进化版，只提取每个人的两名关注者（为了方便分析），实现了MongoDB存储，并且不会存储重复信息，加入了useragent，但代理池没有成功，还有问题。
+bilitest为核心程序，只提取每个人的姓名和性别信息(方便调试），实现了MongoDB存储，并且不会存储重复信息，加入了useragent，代理池连接成功，有两种代理连接方式，一种是连接本地setting文件中的代理，另一种是连接api@jhao104/proxy_pool。
