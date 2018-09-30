@@ -24,6 +24,29 @@ class BiliuserItem(scrapy.Item):
     # 爬取时间
     crawl_time = scrapy.Field()
 
+    rank = scrapy.Field()
+
+    face = scrapy.Field()
+    regtimestamp = scrapy.Field()
+    regtime_local = scrapy.Field()
+    regtime = scrapy.Field()
+    spacesta = scrapy.Field()
+    sign = scrapy.Field()
+    level = scrapy.Field()
+    OfficialVerifyType = scrapy.Field()
+    OfficialVerifyDesc = scrapy.Field()
+    vipType = scrapy.Field()
+    vipStatus = scrapy.Field()
+    toutu = scrapy.Field()
+    toutuId = scrapy.Field()
+    coins = scrapy.Field()
+
+class BiliuserPeople(scrapy.Item):
+
+    mid = scrapy.Field()
+    following = scrapy.Field()
+    fans = scrapy.Field()
+
 class BiliuserFollower(scrapy.Item):
 
     # id
