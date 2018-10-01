@@ -7,13 +7,14 @@
 
 import pymongo
 
-from bilitest.items import BiliuserItem, BiliuserFollower, BiliuserPeople
+from bilitest.items import BiliuserItem, BiliuserFollower, BiliuserPeople, Biliuserfans
 
 
 class MongoPipeline(object):
     collection_users = 'users_infomation'
     collection_people = 'number_of_fans_followers'
     collection_followers = 'followers_info'
+    collection_fans = 'fans_info'
 
     def __init__(self, mongo_uri, mongo_db):
         self.mongo_url = mongo_uri
@@ -37,6 +38,8 @@ class MongoPipeline(object):
             self.db[self.collection_people].update({'mid':item.get('mid')}, {'$set':dict(item)}, True)
         if isinstance(item, BiliuserFollower):
             self.db[self.collection_followers].update({'mid':item.get('mid')}, {'$set':dict(item)}, True)
+        if isinstance(item, Biliuserfans):
+            self.db[self.collection_fans].update({'mid': item.get('mid')}, {'$set': dict(item)}, True)
         return item
 
     def close_spider(self, spider):

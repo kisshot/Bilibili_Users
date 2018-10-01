@@ -56,3 +56,12 @@ class BiliuserFollower(scrapy.Item):
     # 头像
     face = scrapy.Field()
 
+class Biliuserfans(scrapy.Item):
+
+    # id
+    mid = scrapy.Field()
+    # 姓名
+    uname = scrapy.Field()
+    # 头像
+    face = scrapy.Field()
+

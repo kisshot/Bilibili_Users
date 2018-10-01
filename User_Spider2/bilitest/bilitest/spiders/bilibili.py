@@ -7,7 +7,7 @@ import random
 
 import time
 from datetime import datetime
-from bilitest.items import BiliuserItem, BiliuserFollower, BiliuserPeople
+from bilitest.items import BiliuserItem, BiliuserFollower, BiliuserPeople, Biliuserfans
 #from scrapy.http import FormRequest
 
 class BilibiliSpider(scrapy.Spider):
@@ -25,6 +25,7 @@ class BilibiliSpider(scrapy.Spider):
     user_url = 'http://space.bilibili.com/ajax/member/GetInfo'
     people_url = 'https://api.bilibili.com/x/relation/stat?vmid={user}&jsonp=jsonp'
     follows_url = 'https://api.bilibili.com/x/relation/followings?vmid={user}&pn=1&ps=20&order=desc&jsonp=jsonp'  #521401
+    fans_url = 'https://api.bilibili.com/x/relation/followers?vmid={user}&pn=1&ps=20&order=desc&jsonp=jsonp'
 
 
     start_user = '521401'
@@ -48,6 +49,9 @@ class BilibiliSpider(scrapy.Spider):
                                   dont_filter=True)
 
         yield scrapy.http.Request(self.follows_url.format(user=self.start_user), callback=self.parse_follows , dont_filter = True)
+
+        yield scrapy.http.Request(self.fans_url.format(user=self.start_user), callback=self.parse_fans,
+                                  dont_filter=True)
         #return requests
 #https://api.bilibili.com/x/relation/stat?vmid=521401&jsonp=jsonp
     def parse_user(self, response):
@@ -92,7 +96,12 @@ class BilibiliSpider(scrapy.Spider):
         people_url = self.people_url.format(user=mid)
         print(follows_url)
 
+        fans_url = self.fans_url.format(user=mid)  # 粉丝的url
+
+
         yield scrapy.Request(follows_url, callback=self.parse_follows, dont_filter=True)    #调用关注者程序，得到这个人的关注者：进入循环
+
+        yield scrapy.Request(fans_url, callback=self.parse_fans, dont_filter=True)    #粉丝
 
         yield scrapy.Request(self.people_url.format(user=mid), callback=self.parse_people,
                                   dont_filter=True)                                         #调用关注数、粉丝数函数，得到关注数与粉丝数
@@ -124,7 +133,7 @@ class BilibiliSpider(scrapy.Spider):
         '''
 
         #print(response.text)
-        print('用户的关注者信息')
+        print('/////用户的关注者信息//////')
 
         datas = json.loads(response.text)
         if 'data' in datas.keys():
@@ -144,10 +153,43 @@ class BilibiliSpider(scrapy.Spider):
                                          formdata=middata,
                                          callback=self.parse_user, dont_filter=True)      #调用用户函数得到这个关注者的个人信息
                 #yield scrapy.Request(follows_url, callback=self.parse_follows, dont_filter=True)
-                print('该用户关注者信息结束')
+                print('//////该用户关注者信息结束////////')
         else:
             print('wrong')
         #headers=self.headers,
+
+    def parse_fans(self, response):
+        '''
+                粉丝列表，重点在于'mid'
+                :param response:
+                :return:
+                '''
+
+        # print(response.text)
+        print('++++++++++用户的粉丝信息+++++++++++')
+
+        datas = json.loads(response.text)
+        if 'data' in datas.keys():
+            for data in datas['data']['list']:  # for data in datas['data']['list'][:2]:
+                item = Biliuserfans()
+                item['mid'] = data['mid']
+                item['uname'] = data['uname']
+                item['face'] = data['face']
+                middata = {"mid": str(data["mid"])}
+                mid = str(data['mid'])
+                yield item
+
+                # follows_url = self.follows_url.format(user=mid)
+                # print(follows_url)
+
+                yield scrapy.FormRequest(self.user_url, method='POST', headers=self.headers,
+                                         formdata=middata,
+                                         callback=self.parse_user, dont_filter=True)  # 调用用户函数得到这个关注者的个人信息
+                # yield scrapy.Request(follows_url, callback=self.parse_follows, dont_filter=True)
+                print('++++++++++++该用户粉丝信息结束+++++++++++')
+        else:
+            print('wrong')
+        # headers=self.headers,
 
 
 
