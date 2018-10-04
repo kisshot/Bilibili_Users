@@ -1,59 +1,80 @@
 # -*- coding: utf-8 -*-
 import scrapy
-from scrapy import Spider, Request, FormRequest
-import requests
 import json
 import random
 
 import time
-from datetime import datetime
-from bilitest.items import BiliuserItem, BiliuserFollower, BiliuserPeople, Biliuserfans
+
+from biliredis.items import BiliuserItem, BiliuserFollower, BiliuserPeople, Biliuserfans
 #from scrapy.http import FormRequest
 
-class BilibiliSpider(scrapy.Spider):
+
+from scrapy_redis.spiders import RedisSpider
+
+from biliredis.BIliID import biliID
+
+class BilibiliSpider(RedisSpider):
     '''
     整个程序的核心在于循环，具体见Onenote的9.26记录
     '''
     name = 'bilibili'
+
     allowed_domains = ['api.bilibili.com','bilibili.com','space.bilibili.com']
+
     headers = {
         'User-Agent':'Mozilla/4.0 (compatible; MSIE 6.0; Windows NT 5.1; SV1; AcooBrowser; .NET CLR 1.1.4322; .NET CLR 2.0.50727)',
-        'Referer': 'https://space.bilibili.com/122879?from=search&seid=' + str(random.randint(10000, 50000))
+        'Referer': 'https://space.bilibili.com/521401?from=search&seid=' + str(random.randint(10000, 50000))
             #521401
     }
     #
     user_url = 'http://space.bilibili.com/ajax/member/GetInfo'
     people_url = 'https://api.bilibili.com/x/relation/stat?vmid={user}&jsonp=jsonp'
-    follows_url = 'https://api.bilibili.com/x/relation/followings?vmid={user}&pn=1&ps=20&order=desc&jsonp=jsonp'  #521401
-    fans_url = 'https://api.bilibili.com/x/relation/followers?vmid={user}&pn=1&ps=20&order=desc&jsonp=jsonp'
+    follows_url = 'https://api.bilibili.com/x/relation/followings?vmid={user}&pn=1&ps=20&order=desc&jsonp=jsonp'  # 521401
+    fans_url = 'https://api.bilibili.com/x/relation/followers?vmid={user}&pn={pn}&ps=20&order=desc&jsonp=jsonp'
+
+    start_user = '521401'
 
 
-    start_user = '122879'
+    redis_key = 'bilibili:start_urls'
+    start_urls = list(set(biliID))
 
-    def start_requests(self):
+
+
+
+    # # __init__方法必须按规定写，使用时只需要修改super()里的类名参数即可
+    # def __init__(self, *args, **kwargs):
+    #     # 修改这里的类名为当前类名
+    #     super(BilibiliSpider, self).__init__(*args, **kwargs)
+
+
+    def start_requests(self):      #这里应该要删除start_requests函数，然后在redis中lpush 网址
         '''
         初始爬取521401
         :return:
         '''
-
-
         #follows_url_2 = 'https://api.bilibili.com/x/relation/followings?vmid=521401&pn=2&ps=20&order=desc&jsonp=jsonp'
         # requests = []
         #formdata= {"mid":"521401"}
         # request = FormRequest(url, callback=self.parse_user, formdata=formdata, headers=self.headers)
         # requests.append(request)
+        for uid in self.start_urls:
+            mid = str(uid)
+            print(mid)
 
-        yield scrapy.http.FormRequest(self.user_url, method='POST', headers=self.headers, formdata={"mid":"122879"}, callback=self.parse_user, dont_filter = True)
+            yield scrapy.http.FormRequest(self.user_url, method='POST', headers=self.headers,
+                                          formdata={"mid": mid}, callback=self.parse_user, dont_filter=True)
 
-        yield scrapy.http.Request(self.people_url.format(user=self.start_user), callback=self.parse_people,
-                                  dont_filter=True)
+            yield scrapy.http.Request(self.people_url.format(user=self.start_user), callback=self.parse_people,
+                                      dont_filter=True)
 
-        yield scrapy.http.Request(self.follows_url.format(user=self.start_user), callback=self.parse_follows , dont_filter = True)
+            yield scrapy.http.Request(self.follows_url.format(user=self.start_user), callback=self.parse_follows,
+                                      dont_filter=True)
 
-        yield scrapy.http.Request(self.fans_url.format(user=self.start_user), callback=self.parse_fans,
-                                  dont_filter=True)
+            yield scrapy.http.Request(self.fans_url.format(user=self.start_user, pn=1), callback=self.parse_fans,
+                                      dont_filter=True)
+
         #return requests
-#https://api.bilibili.com/x/relation/stat?vmid=521401&jsonp=jsonp
+
     def parse_user(self, response):
         '''
         个人信息
@@ -92,16 +113,20 @@ class BilibiliSpider(scrapy.Spider):
 
         yield item
 
-        follows_url = self.follows_url.format(user=mid)                 #关注者的url
-        people_url = self.people_url.format(user=mid)
-        print(follows_url)
+        #follows_url = self.follows_url.format(user=mid)                 #关注者的url
+        #fans_url = self.fans_url.format(user=mid, pn=pn)  # 粉丝的url
+        #people_url = self.people_url.format(user=mid)
+        #print(follows_url)
 
-        fans_url = self.fans_url.format(user=mid)  # 粉丝的url
 
 
-        yield scrapy.Request(follows_url, callback=self.parse_follows, dont_filter=True)    #调用关注者程序，得到这个人的关注者：进入循环
 
-        yield scrapy.Request(fans_url, callback=self.parse_fans, dont_filter=True)    #粉丝
+        yield scrapy.Request(self.follows_url.format(user=mid), callback=self.parse_follows, dont_filter=True)    #调用关注者程序，得到这个人的关注者：进入循环
+
+        yield scrapy.Request(self.fans_url.format(user=mid, pn=1), callback=self.parse_fans, dont_filter=True)  # 粉丝
+
+        # for pn in range(1,6):
+        #     yield scrapy.Request(self.fans_url.format(user=mid, pn=pn), callback=self.parse_fans, dont_filter=True)    #粉丝
 
         yield scrapy.Request(self.people_url.format(user=mid), callback=self.parse_people,
                                   dont_filter=True)                                         #调用关注数、粉丝数函数，得到关注数与粉丝数
@@ -169,6 +194,12 @@ class BilibiliSpider(scrapy.Spider):
         print('++++++++++用户的粉丝信息+++++++++++')
 
         datas = json.loads(response.text)
+
+        #
+        # if datas['data']['re_version'] == 0:
+        #     print('没有这一页')
+        #     pass
+
         if 'data' in datas.keys():
             for data in datas['data']['list']:  # for data in datas['data']['list'][:2]:
                 item = Biliuserfans()
@@ -186,9 +217,16 @@ class BilibiliSpider(scrapy.Spider):
                                          formdata=middata,
                                          callback=self.parse_user, dont_filter=True)  # 调用用户函数得到这个关注者的个人信息
                 # yield scrapy.Request(follows_url, callback=self.parse_follows, dont_filter=True)
-                print('++++++++++++该用户粉丝信息结束+++++++++++')
+                print('++++++++++++该用户第一页粉丝信息结束+++++++++++')
+
+
+
+
+
+
         else:
             print('wrong')
+
         # headers=self.headers,
 
 
