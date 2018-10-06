@@ -32,7 +32,6 @@ class BilibiliSpider(RedisSpider):
     follows_url = 'https://api.bilibili.com/x/relation/followings?vmid={user}&pn=1&ps=20&order=desc&jsonp=jsonp'  # 521401
     fans_url = 'https://api.bilibili.com/x/relation/followers?vmid={user}&pn={pn}&ps=20&order=desc&jsonp=jsonp'
 
-    start_user = '521401'
 
 
     redis_key = 'bilibili:start_urls'
@@ -64,13 +63,14 @@ class BilibiliSpider(RedisSpider):
             yield scrapy.http.FormRequest(self.user_url, method='POST', headers=self.headers,
                                           formdata={"mid": mid}, callback=self.parse_user, dont_filter=True)
 
-            yield scrapy.http.Request(self.people_url.format(user=self.start_user), callback=self.parse_people,
+            # yield scrapy.http.Request(self.people_url.format(user=mid), callback=self.parse_people,
+            #                           dont_filter=True)
+
+            yield scrapy.http.Request(self.follows_url.format(user=mid), callback=self.parse_follows,
                                       dont_filter=True)
 
-            yield scrapy.http.Request(self.follows_url.format(user=self.start_user), callback=self.parse_follows,
-                                      dont_filter=True)
-
-            yield scrapy.http.Request(self.fans_url.format(user=self.start_user, pn=1), callback=self.parse_fans,
+            for pn in range(1,6):
+                yield scrapy.http.Request(self.fans_url.format(user=mid, pn=pn), callback=self.parse_fans,
                                       dont_filter=True)
 
         #return requests
@@ -123,30 +123,30 @@ class BilibiliSpider(RedisSpider):
 
         yield scrapy.Request(self.follows_url.format(user=mid), callback=self.parse_follows, dont_filter=True)    #调用关注者程序，得到这个人的关注者：进入循环
 
-        yield scrapy.Request(self.fans_url.format(user=mid, pn=1), callback=self.parse_fans, dont_filter=True)  # 粉丝
+        # yield scrapy.Request(self.fans_url.format(user=mid, pn=1), callback=self.parse_fans, dont_filter=True)  # 粉丝
 
-        # for pn in range(1,6):
-        #     yield scrapy.Request(self.fans_url.format(user=mid, pn=pn), callback=self.parse_fans, dont_filter=True)    #粉丝
+        for pn in range(1,6):
+            yield scrapy.Request(self.fans_url.format(user=mid, pn=pn), callback=self.parse_fans, dont_filter=True)    #粉丝
 
-        yield scrapy.Request(self.people_url.format(user=mid), callback=self.parse_people,
-                                  dont_filter=True)                                         #调用关注数、粉丝数函数，得到关注数与粉丝数
+        # yield scrapy.Request(self.people_url.format(user=mid), callback=self.parse_people,
+        #                           dont_filter=True)                                         #调用关注数、粉丝数函数，得到关注数与粉丝数
 
 
         print('-----用户个人信息的结尾---------')
 
-    def parse_people(self, response):
-
-        item = BiliuserPeople()
-        print('________用户关注数和粉丝数___________')
-        datas = json.loads(response.text)["data"]
-
-        item['mid'] = datas['mid']
-        item['following'] = datas['following']
-        item['fans'] = datas['follower']
-
-        yield item
-
-        print('________数目结束_________')
+    # def parse_people(self, response):
+    #
+    #     item = BiliuserPeople()
+    #     print('________用户关注数和粉丝数___________')
+    #     datas = json.loads(response.text)["data"]
+    #
+    #     item['mid'] = datas['mid']
+    #     item['following'] = datas['following']
+    #     item['fans'] = datas['follower']
+    #
+    #     yield item
+    #
+    #     print('________数目结束_________')
 
 
 
@@ -158,18 +158,18 @@ class BilibiliSpider(RedisSpider):
         '''
 
         #print(response.text)
-        print('/////用户的关注者信息//////')
+        #print('/////用户的关注者信息//////')
 
         datas = json.loads(response.text)
         if 'data' in datas.keys():
             for data in datas['data']['list']:    #for data in datas['data']['list'][:2]:
-                item = BiliuserFollower()
-                item['mid'] = data['mid']
-                item['uname'] = data['uname']
-                item['face'] = data['face']
+                # item = BiliuserFollower()
+                # item['mid'] = data['mid']
+                # item['uname'] = data['uname']
+                # item['face'] = data['face']
                 middata = {"mid": str(data["mid"])}
                 mid = str(data['mid'])
-                yield item
+                # yield item
 
                 #follows_url = self.follows_url.format(user=mid)
                 #print(follows_url)
@@ -177,8 +177,8 @@ class BilibiliSpider(RedisSpider):
                 yield scrapy.FormRequest(self.user_url, method='POST', headers=self.headers,
                                          formdata=middata,
                                          callback=self.parse_user, dont_filter=True)      #调用用户函数得到这个关注者的个人信息
-                #yield scrapy.Request(follows_url, callback=self.parse_follows, dont_filter=True)
-                print('//////该用户关注者信息结束////////')
+
+                #print('//////该用户关注者信息结束////////')
         else:
             print('wrong')
         #headers=self.headers,
@@ -191,7 +191,7 @@ class BilibiliSpider(RedisSpider):
                 '''
 
         # print(response.text)
-        print('++++++++++用户的粉丝信息+++++++++++')
+        #print('++++++++++用户的粉丝信息+++++++++++')
 
         datas = json.loads(response.text)
 
@@ -202,13 +202,13 @@ class BilibiliSpider(RedisSpider):
 
         if 'data' in datas.keys():
             for data in datas['data']['list']:  # for data in datas['data']['list'][:2]:
-                item = Biliuserfans()
-                item['mid'] = data['mid']
-                item['uname'] = data['uname']
-                item['face'] = data['face']
+                # item = Biliuserfans()
+                # item['mid'] = data['mid']
+                # item['uname'] = data['uname']
+                # item['face'] = data['face']
                 middata = {"mid": str(data["mid"])}
                 mid = str(data['mid'])
-                yield item
+                # yield item
 
                 # follows_url = self.follows_url.format(user=mid)
                 # print(follows_url)
@@ -216,11 +216,8 @@ class BilibiliSpider(RedisSpider):
                 yield scrapy.FormRequest(self.user_url, method='POST', headers=self.headers,
                                          formdata=middata,
                                          callback=self.parse_user, dont_filter=True)  # 调用用户函数得到这个关注者的个人信息
-                # yield scrapy.Request(follows_url, callback=self.parse_follows, dont_filter=True)
-                print('++++++++++++该用户第一页粉丝信息结束+++++++++++')
 
-
-
+                #print('++++++++++++该用户第一页粉丝信息结束+++++++++++')
 
 
 

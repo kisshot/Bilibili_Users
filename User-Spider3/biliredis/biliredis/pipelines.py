@@ -34,12 +34,12 @@ class MongoPipeline(object):
     def process_item(self, item, spider):
         if isinstance(item, BiliuserItem):
             self.db[self.collection_users].update({'mid':item.get('mid')}, {'$set':dict(item)}, True)
-        if isinstance(item, BiliuserPeople):
-            self.db[self.collection_people].update({'mid':item.get('mid')}, {'$set':dict(item)}, True)
-        if isinstance(item, BiliuserFollower):
-            self.db[self.collection_followers].update({'mid':item.get('mid')}, {'$set':dict(item)}, True)
-        if isinstance(item, Biliuserfans):
-            self.db[self.collection_fans].update({'mid': item.get('mid')}, {'$set': dict(item)}, True)
+        # if isinstance(item, BiliuserPeople):
+        #     self.db[self.collection_people].update({'mid':item.get('mid')}, {'$set':dict(item)}, True)
+        # if isinstance(item, BiliuserFollower):
+        #     self.db[self.collection_followers].update({'mid':item.get('mid')}, {'$set':dict(item)}, True)
+        # if isinstance(item, Biliuserfans):
+        #     self.db[self.collection_fans].update({'mid': item.get('mid')}, {'$set': dict(item)}, True)
         return item
 
     def close_spider(self, spider):

@@ -16,8 +16,11 @@ SCHEDULER = "scrapy_redis.scheduler.Scheduler"
 
 # Ensure all spiders share same duplicates filter through redis.
 DUPEFILTER_CLASS = "scrapy_redis.dupefilter.RFPDupeFilter"
+
 SCHEDULER_PERSIST = True
-FEED_EXPORT_ENCODING = 'utf-8'
+
+SCHEDULER_QUEUE_CLASS = "scrapy_redis.queue.SpiderPriorityQueue"
+
 
 
 REDIS_HOST = 'localhost'
@@ -49,7 +52,7 @@ ROBOTSTXT_OBEY = False
 # Configure a delay for requests for the same website (default: 0)
 # See https://doc.scrapy.org/en/latest/topics/settings.html#download-delay
 # See also autothrottle settings and docs
-DOWNLOAD_DELAY = 0.05
+DOWNLOAD_DELAY = 3
 # The download delay setting will honor only one of:
 # CONCURRENT_REQUESTS_PER_DOMAIN = 16
 # CONCURRENT_REQUESTS_PER_IP = 16
@@ -59,6 +62,7 @@ DOWNLOAD_DELAY = 0.05
 DOWNLOADER_MIDDLEWARES = {
 
     'biliredis.middlewares.BiliUserAgentMiddleware': 400,
+    'biliredis.middlewares.BiliProxyMiddleware':399
 
 }
 
@@ -68,9 +72,12 @@ DOWNLOADER_MIDDLEWARES = {
 # 'biliredis.middlewares.BiliUserAgentMiddleware': 400,
 # 'biliredis.middlewares.BiliProxyMiddleware':401
 
-MONGO_URI = 'localhost'
-MONGO_DB = 'biliredis'
+#MONGO_URI = 'localhost'
 
+MONGO_URI = '192.168.1.102'
+MONGO_DB = 'bilitest'
+
+#MONGO_DB = 'biliredis'
 PROXY_URL = 'http://localhost:5555/random'
 
 # 'biliuser.middlewares.biliuserProxyMiddleware': 543,
@@ -85,15 +92,18 @@ PROXY_URL = 'http://localhost:5555/random'
 # See https://doc.scrapy.org/en/latest/topics/item-pipeline.html
 ITEM_PIPELINES = {
     'biliredis.pipelines.MongoPipeline': 300,
-    'scrapy_redis.pipelines.RedisPipeline': 299,
+
 }
+#'scrapy_redis.pipelines.RedisPipeline': 299,
 
 IPPOOL=[
-    {"ipaddr":"127.0.0.1:1087"},
-    {"ipaddr":"210.26.124.143:808"},
-    {"ipaddr":"60.248.17.42:8080"},
+    {"ipaddr":"218.207.212.86:80"},
     {"ipaddr":"150.138.220.247:80"},
-    {"ipaddr":"119.28.118.116:1080"},
+    {"ipaddr":"139.224.24.26:8888"},
+    {"ipaddr":"150.138.220.247:80"},
+    {"ipaddr":"120.92.74.189:3128"},
+    {"ipaddr":"218.60.8.99:3129"},
+    {"ipaddr":"115.159.31.195:8080"},
 
 ]
 

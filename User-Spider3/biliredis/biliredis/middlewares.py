@@ -39,33 +39,37 @@ class BiliUserAgentMiddleware():   #UserAgentMiddleware
         #print('User-Agent：', agent)
 
 
-def get_proxy():
-    '''
-    获得代理
-    :return: 可用的代理ip
-    '''
-    return requests.get("http://127.0.0.1:5010/get/").text
 
-# class BiliProxyMiddleware():            #代理池----已经成功，如果失败是代理自身的问题
-#
-#     def __init__(self, ip=''):
-#
-#         self.ip = ip
-#
-#     def process_request(self, request, spider):
-#         thisip = random.choice(IPPOOL)
-#         print("this is ip:" + thisip["ipaddr"])
-#         request.meta["proxy"] = "http://" + thisip["ipaddr"]
 
-class BiliProxyMiddleware():            #代理池----已经成功，但不保证每个代理都可用
+class BiliProxyMiddleware():            #代理池----已经成功，如果失败是代理自身的问题
+
+    def __init__(self, ip=''):
+
+        self.ip = ip
 
     def process_request(self, request, spider):
-        proxy_original = get_proxy()
-        proxy_str = str(proxy_original)
-        proxy = {
-            'http': proxy_str
-        }
-        request.meta["proxy"] = "http://" + proxy['http']
+        thisip = random.choice(IPPOOL)
+        print("this is ip:" + thisip["ipaddr"])
+        request.meta["proxy"] = "http://" + thisip["ipaddr"]
+
+# def get_proxy():
+#     '''
+#     获得代理
+#     :return: 可用的代理ip
+#     '''
+#     return requests.get("http://127.0.0.1:5010/get/").text
+#
+# class BiliProxyMiddleware():            #代理池----已经成功，但不保证每个代理都可用
+#
+#     def process_request(self, request, spider):
+#         proxy_original = get_proxy()
+#         proxy_str = str(proxy_original)
+#         proxy = {
+#             'http': proxy_str
+#         }
+#
+#         print('代理：', proxy_str)
+#         request.meta["proxy"] = "http://" + proxy['http']
 
 
 
