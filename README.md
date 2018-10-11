@@ -20,5 +20,5 @@ bilitest为核心程序，抓取每个人的姓名和性别信息等，以及他
 biliredis为核心程序，分布式程序，目前在本地运行成功，requests队列存入了redis数据库中
 
 * **统计结果**： \
-![image](http://github.com/kisshot/Bilibili_Users/master/images/level.png)
+![image text](http://github.com/kisshot/Bilibili_Users/master/images/level.png)
 
